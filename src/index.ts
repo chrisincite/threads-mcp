@@ -18,13 +18,17 @@ async function main() {
 
     if (appId && appSecret) {
       // New OAuth flow - automatic authentication
-      console.error('🔐 Using OAuth authentication...');
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('🔐 Threads MCP Server - OAuth 2.0 Authentication');
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('');
 
       const oauthServer = new OAuthServer({
         appId,
         appSecret,
       });
 
+      console.error('🔍 Checking for existing authentication...');
       const tokenManager = await oauthServer.getTokenManager();
 
       client = new ThreadsClient({
@@ -33,7 +37,11 @@ async function main() {
         tokenManager: tokenManager,
       });
 
-      console.error('✅ OAuth authentication successful!');
+      console.error('');
+      console.error('✅ Authentication successful!');
+      console.error(`👤 User ID: ${tokenManager.getUserId()}`);
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('');
     } else if (accessToken && userId) {
       // Legacy manual token method
       console.error('⚠️  Using manual token authentication (legacy method)');

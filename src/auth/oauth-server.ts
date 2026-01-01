@@ -42,12 +42,19 @@ export class OAuthServer {
     // Check if we have a valid token already
     const existingToken = await this.loadToken();
     if (existingToken && this.isTokenValid(existingToken)) {
-      console.error('✅ Using existing valid token');
+      console.error('✅ Found existing valid token - authentication complete!');
+      console.error(`   Token expires: ${new Date(existingToken.expiresAt).toLocaleString()}`);
       return existingToken;
     }
 
-    console.error('🔐 Starting OAuth authentication flow...');
-    console.error(`📡 Starting local server on http://localhost:${this.port}`);
+    if (existingToken && !this.isTokenValid(existingToken)) {
+      console.error('⚠️  Existing token expired - refreshing authentication...');
+    } else {
+      console.error('🔐 No valid token found - starting OAuth authentication...');
+    }
+
+    console.error('📡 Starting local OAuth callback server on http://localhost:' + this.port);
+    console.error('🌐 Your browser will open automatically for Threads authorization...');
 
     return new Promise((resolve, reject) => {
       this.resolveAuth = resolve;
@@ -68,9 +75,24 @@ export class OAuthServer {
             Math.random().toString(36).substring(7) // CSRF state
           );
 
-          console.error('\n🌐 Opening browser for authentication...');
-          console.error("📋 If browser doesn't open, visit:");
-          console.error(`   ${authUrl}\n`);
+          console.error('');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('🌐 OPENING BROWSER FOR THREADS AUTHORIZATION');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('');
+          console.error('👉 Your browser will open automatically in a moment...');
+          console.error('');
+          console.error('📝 Please:');
+          console.error('   1. Log in to your Threads account');
+          console.error('   2. Authorize the application');
+          console.error('   3. You will be redirected back automatically');
+          console.error('');
+          console.error("🔗 If browser doesn't open automatically, copy this URL:");
+          console.error(`   ${authUrl}`);
+          console.error('');
+          console.error('⏳ Waiting for authorization...');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('');
 
           // Try to open browser
           await this.openBrowser(authUrl);
@@ -143,9 +165,18 @@ export class OAuthServer {
         // Save token
         await this.saveToken(token);
 
-        console.error('✅ Authentication successful!');
-        console.error(`   User ID: ${result.userId}`);
-        console.error(`   Token expires in ${Math.floor(result.expiresIn / 86400)} days`);
+        console.error('');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('✅ AUTHORIZATION SUCCESSFUL!');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('');
+        console.error(`👤 User ID: ${result.userId}`);
+        console.error(`⏰ Token expires in ${Math.floor(result.expiresIn / 86400)} days`);
+        console.error(`💾 Token saved to: ${this.tokenStorePath}`);
+        console.error('');
+        console.error('🎉 You can close the browser window now!');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('');
 
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(this.getSuccessPage());
