@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-12-15
+
+### Improved
+
+- **Enhanced OAuth User Experience** - Significantly improved OAuth flow visibility and user guidance:
+  - Added prominent visual banners with box-drawing characters for OAuth flow stages
+  - Clear step-by-step instructions displayed when browser opens for authorization
+  - Token expiration information shown when using existing valid tokens
+  - Detailed success messages including token storage location and expiration
+  - Better status messages throughout the authentication process
+  - More obvious indication when browser will open automatically
+
 ## [1.1.0] - 2025-12-15
 
 ### Added
@@ -90,5 +102,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI/CD ready (to be configured)
 - Conventional commits structure
 
+[1.1.1]: https://github.com/pegasusheavy/threads-mcp/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/pegasusheavy/threads-mcp/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/pegasusheavy/threads-mcp/releases/tag/v1.0.0
