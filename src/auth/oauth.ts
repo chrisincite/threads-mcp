@@ -4,7 +4,8 @@ import { z } from 'zod';
 // OAuth Response Schemas
 export const OAuthTokenResponseSchema = z.object({
   access_token: z.string(),
-  token_type: z.string(),
+  user_id: z.union([z.string(), z.number()]).optional(),
+  token_type: z.string().optional(),
   expires_in: z.number().optional(),
 });
 
@@ -42,9 +43,6 @@ export class ThreadsOAuth {
     this.config = config;
     this.client = axios.create({
       timeout: 30000,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
     });
   }
 
@@ -75,15 +73,15 @@ export class ThreadsOAuth {
    * Call this after user authorizes and you receive the code via redirect
    */
   async exchangeCodeForToken(code: string): Promise<OAuthTokenResponse> {
-    const params = new URLSearchParams({
+    const params = {
       client_id: this.config.appId,
       client_secret: this.config.appSecret,
       grant_type: 'authorization_code',
       redirect_uri: this.config.redirectUri,
       code,
-    });
+    };
 
-    const response = await this.client.post(this.tokenUrl, params.toString());
+    const response = await this.client.postForm(this.tokenUrl, params);
     return OAuthTokenResponseSchema.parse(response.data);
   }
 
@@ -150,8 +148,12 @@ export class ThreadsOAuth {
     // Exchange for long-lived token
     const longToken = await this.getLongLivedToken(shortToken.access_token);
 
-    // Get user ID
-    const userId = await this.getUserId(longToken.access_token);
+    // The short-lived token exchange returns user_id per the Threads docs.
+    // Fall back to /me for older or nonstandard responses.
+    const userId =
+      shortToken.user_id !== undefined
+        ? String(shortToken.user_id)
+        : await this.getUserId(longToken.access_token);
 
     return {
       accessToken: longToken.access_token,

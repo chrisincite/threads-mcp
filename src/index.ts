@@ -8,6 +8,7 @@ async function main() {
   // Check for OAuth credentials first (new preferred method)
   const appId = process.env.THREADS_APP_ID;
   const appSecret = process.env.THREADS_APP_SECRET;
+  const authMode = process.env.THREADS_AUTH_MODE;
 
   // Fallback to manual token method
   const accessToken = process.env.THREADS_ACCESS_TOKEN;
@@ -16,7 +17,20 @@ async function main() {
   try {
     let client: ThreadsClient;
 
-    if (appId && appSecret) {
+    if (authMode === 'manual' && accessToken && userId) {
+      console.error('⚠️  Using manual token authentication');
+
+      client = new ThreadsClient({
+        accessToken,
+        userId,
+      });
+
+      const isValid = await client.validateToken();
+      if (!isValid) {
+        console.error('❌ Error: Invalid access token or user ID');
+        process.exit(1);
+      }
+    } else if (appId && appSecret) {
       // New OAuth flow - automatic authentication
       console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.error('🔐 Threads MCP Server - OAuth 2.0 Authentication');
@@ -26,6 +40,10 @@ async function main() {
       const oauthServer = new OAuthServer({
         appId,
         appSecret,
+        protocol: process.env.THREADS_OAUTH_PROTOCOL === 'https' ? 'https' : 'http',
+        certPath: process.env.THREADS_OAUTH_CERT_PATH,
+        keyPath: process.env.THREADS_OAUTH_KEY_PATH,
+        callbackPath: process.env.THREADS_OAUTH_CALLBACK_PATH,
       });
 
       console.error('🔍 Checking for existing authentication...');
@@ -83,7 +101,10 @@ async function main() {
     console.error('🚀 Threads MCP Server starting...');
     await server.run();
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error(
+      '❌ Failed to start server:',
+      error instanceof Error ? error.message : String(error)
+    );
     process.exit(1);
   }
 }

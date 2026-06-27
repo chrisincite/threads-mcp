@@ -47,12 +47,12 @@ describe('ThreadsOAuth', () => {
       const mockResponse = {
         data: {
           access_token: 'short-lived-token',
-          token_type: 'bearer',
+          user_id: 123456789,
         },
       };
 
       vi.mocked(axios.create).mockReturnValue({
-        post: vi.fn().mockResolvedValue(mockResponse),
+        postForm: vi.fn().mockResolvedValue(mockResponse),
       } as any);
 
       oauth = new ThreadsOAuth(mockConfig);
@@ -60,7 +60,7 @@ describe('ThreadsOAuth', () => {
 
       expect(result).toEqual({
         access_token: 'short-lived-token',
-        token_type: 'bearer',
+        user_id: 123456789,
       });
     });
 
@@ -72,7 +72,7 @@ describe('ThreadsOAuth', () => {
       };
 
       vi.mocked(axios.create).mockReturnValue({
-        post: vi.fn().mockResolvedValue(mockResponse),
+        postForm: vi.fn().mockResolvedValue(mockResponse),
       } as any);
 
       oauth = new ThreadsOAuth(mockConfig);
@@ -167,26 +167,19 @@ describe('ThreadsOAuth', () => {
   describe('completeOAuthFlow', () => {
     it('should complete full OAuth flow', async () => {
       const mockClient = {
-        post: vi.fn().mockResolvedValue({
+        postForm: vi.fn().mockResolvedValue({
           data: {
             access_token: 'short-token',
-            token_type: 'bearer',
+            user_id: '123456789',
           },
         }),
-        get: vi
-          .fn()
-          .mockResolvedValueOnce({
-            data: {
-              access_token: 'long-token',
-              token_type: 'bearer',
-              expires_in: 5184000,
-            },
-          })
-          .mockResolvedValueOnce({
-            data: {
-              id: '123456789',
-            },
-          }),
+        get: vi.fn().mockResolvedValueOnce({
+          data: {
+            access_token: 'long-token',
+            token_type: 'bearer',
+            expires_in: 5184000,
+          },
+        }),
       };
 
       vi.mocked(axios.create).mockReturnValue(mockClient as any);
@@ -199,6 +192,7 @@ describe('ThreadsOAuth', () => {
         userId: '123456789',
         expiresIn: 5184000,
       });
+      expect(mockClient.get).toHaveBeenCalledTimes(1);
     });
   });
 });

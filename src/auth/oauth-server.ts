@@ -1,4 +1,5 @@
 import * as http from 'http';
+import * as https from 'https';
 import { URL } from 'url';
 import { ThreadsOAuth, TokenManager, type StoredToken } from './oauth.js';
 import * as fs from 'fs/promises';
@@ -9,6 +10,10 @@ export interface OAuthServerConfig {
   appSecret: string;
   port?: number;
   tokenStorePath?: string;
+  protocol?: 'http' | 'https';
+  certPath?: string;
+  keyPath?: string;
+  callbackPath?: string;
 }
 
 /**
@@ -17,22 +22,32 @@ export interface OAuthServerConfig {
  */
 export class OAuthServer {
   private oauth: ThreadsOAuth;
-  private server: http.Server | null = null;
+  private server: http.Server | https.Server | null = null;
   private port: number;
+  private protocol: 'http' | 'https';
+  private callbackPath: string;
   private tokenStorePath: string;
   private resolveAuth: ((token: StoredToken) => void) | null = null;
   private rejectAuth: ((error: Error) => void) | null = null;
 
   constructor(config: OAuthServerConfig) {
     this.port = config.port || 48810; // High port number to avoid collisions
+    this.protocol = config.protocol || 'http';
+    this.callbackPath = config.callbackPath || '/callback';
     this.tokenStorePath = config.tokenStorePath || path.join(process.cwd(), '.threads-token.json');
 
     this.oauth = new ThreadsOAuth({
       appId: config.appId,
       appSecret: config.appSecret,
-      redirectUri: `http://localhost:${this.port}/callback`,
+      redirectUri: `${this.protocol}://localhost:${this.port}${this.callbackPath}`,
     });
+
+    this.certPath = config.certPath;
+    this.keyPath = config.keyPath;
   }
+
+  private certPath?: string;
+  private keyPath?: string;
 
   /**
    * Start the OAuth flow
@@ -53,14 +68,24 @@ export class OAuthServer {
       console.error('🔐 No valid token found - starting OAuth authentication...');
     }
 
-    console.error('📡 Starting local OAuth callback server on http://localhost:' + this.port);
+    console.error(
+      `📡 Starting local OAuth callback server on ${this.protocol}://localhost:${this.port}`
+    );
     console.error('🌐 Your browser will open automatically for Threads authorization...');
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       this.resolveAuth = resolve;
       this.rejectAuth = reject;
 
-      this.server = http.createServer((req, res) => this.handleRequest(req, res));
+      try {
+        this.server =
+          this.protocol === 'https'
+            ? await this.createHttpsServer()
+            : http.createServer((req, res) => this.handleRequest(req, res));
+      } catch (error) {
+        this.rejectAuth?.(error as Error);
+        return;
+      }
 
       this.server.listen(this.port, async () => {
         try {
@@ -128,9 +153,12 @@ export class OAuthServer {
    * Handle HTTP requests to the OAuth callback server
    */
   private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    const url = new URL(req.url || '', `http://localhost:${this.port}`);
+    const url = new URL(req.url || '', `${this.protocol}://localhost:${this.port}`);
 
-    if (url.pathname === '/callback') {
+    if (
+      url.pathname === this.callbackPath ||
+      url.pathname === this.callbackPath.replace(/\/$/, '')
+    ) {
       const code = url.searchParams.get('code');
       const error = url.searchParams.get('error');
 
@@ -184,7 +212,7 @@ export class OAuthServer {
         this.server?.close();
         this.resolveAuth?.(token);
       } catch (error) {
-        console.error('❌ Authentication failed:', error);
+        console.error('❌ Authentication failed:', this.formatError(error));
         res.writeHead(500, { 'Content-Type': 'text/html' });
         res.end(this.getErrorPage((error as Error).message));
         this.server?.close();
@@ -218,6 +246,44 @@ export class OAuthServer {
     } catch {
       // Browser opening failed, user will need to copy URL manually
     }
+  }
+
+  private async createHttpsServer(): Promise<https.Server> {
+    if (!this.certPath || !this.keyPath) {
+      throw new Error('HTTPS OAuth requires THREADS_OAUTH_CERT_PATH and THREADS_OAUTH_KEY_PATH.');
+    }
+
+    const [cert, key] = await Promise.all([fs.readFile(this.certPath), fs.readFile(this.keyPath)]);
+
+    return https.createServer({ cert, key }, (req, res) => this.handleRequest(req, res));
+  }
+
+  private formatError(error: unknown): string {
+    if (typeof error !== 'object' || error === null) {
+      return String(error);
+    }
+
+    const maybeAxios = error as {
+      message?: string;
+      response?: {
+        status?: number;
+        data?: unknown;
+        headers?: Record<string, unknown>;
+      };
+    };
+
+    const parts = [maybeAxios.message || 'Unknown error'];
+    if (maybeAxios.response?.status) {
+      parts.push(`status=${maybeAxios.response.status}`);
+    }
+    if (maybeAxios.response?.data) {
+      parts.push(`data=${JSON.stringify(maybeAxios.response.data)}`);
+    }
+    if (maybeAxios.response?.headers?.['www-authenticate']) {
+      parts.push(`www-authenticate=${String(maybeAxios.response.headers['www-authenticate'])}`);
+    }
+
+    return parts.join(' | ');
   }
 
   /**

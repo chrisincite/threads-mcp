@@ -310,7 +310,7 @@ export class ThreadsClient {
    */
   async validateToken(): Promise<boolean> {
     try {
-      await this.getProfile(['id']);
+      await this.getProfile(['id', 'username']);
       return true;
     } catch {
       return false;
