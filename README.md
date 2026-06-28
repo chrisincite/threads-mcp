@@ -32,6 +32,7 @@ The server provides the following MCP tools:
 - **`threads_get_threads`** - Retrieve user's threads (posts) with pagination
 - **`threads_get_thread`** - Get a specific thread by ID
 - **`threads_create_thread`** - Create new threads with text, images, or videos
+- **`threads_delete_thread`** - Delete a thread owned by the authenticated user
 - **`threads_reply_to_thread`** - Reply to existing threads
 
 ### Engagement & Analytics

@@ -16,6 +16,7 @@ describe('ThreadsClient', () => {
   const mockAxiosInstance = {
     get: vi.fn(),
     post: vi.fn(),
+    delete: vi.fn(),
     interceptors: {
       request: { use: vi.fn() },
       response: { use: vi.fn() },
@@ -361,6 +362,28 @@ describe('ThreadsClient', () => {
     });
   });
 
+  describe('deleteThread', () => {
+    it('should delete a thread by ID', async () => {
+      const mockDeleteResponse = {
+        success: true,
+        deleted_id: 'thread-123',
+      };
+
+      mockAxiosInstance.delete.mockResolvedValue({ data: mockDeleteResponse });
+
+      const result = await client.deleteThread('thread-123');
+
+      expect(mockAxiosInstance.delete).toHaveBeenCalledWith('/thread-123');
+      expect(result).toEqual(mockDeleteResponse);
+    });
+
+    it('should throw validation error for invalid delete response', async () => {
+      mockAxiosInstance.delete.mockResolvedValue({ data: { success: true } });
+
+      await expect(client.deleteThread('thread-123')).rejects.toThrow();
+    });
+  });
+
   describe('getUserInsights', () => {
     it('should fetch user-level insights', async () => {
       const mockInsights = {
@@ -549,4 +572,3 @@ describe('ThreadsClient', () => {
     });
   });
 });
-

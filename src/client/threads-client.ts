@@ -8,6 +8,7 @@ import {
   ThreadsConversation,
   CreateThreadResponse,
   CreateThreadParams,
+  DeleteThreadResponse,
   GetMediaParams,
   GetInsightsParams,
   GetRepliesParams,
@@ -17,6 +18,7 @@ import {
   ThreadsRepliesSchema,
   ThreadsConversationSchema,
   CreateThreadResponseSchema,
+  DeleteThreadResponseSchema,
 } from '../types/threads.js';
 
 export class ThreadsAPIError extends Error {
@@ -216,6 +218,14 @@ export class ThreadsClient {
     });
 
     return CreateThreadResponseSchema.parse(publishResponse.data);
+  }
+
+  /**
+   * Delete a thread by ID
+   */
+  async deleteThread(threadId: string): Promise<DeleteThreadResponse> {
+    const response = await this.client.delete(`/${threadId}`);
+    return DeleteThreadResponseSchema.parse(response.data);
   }
 
   /**

@@ -31,6 +31,10 @@ const CreateThreadSchema = z.object({
   replyControl: z.enum(['everyone', 'accounts_you_follow', 'mentioned_only']).optional(),
 });
 
+const DeleteThreadSchema = z.object({
+  threadId: z.string().min(1),
+});
+
 const GetInsightsSchema = z.object({
   threadId: z.string().optional(),
   metrics: z.array(z.string()).min(1),
@@ -82,21 +86,23 @@ export class ThreadsMCPServer {
       const tools: Tool[] = [
         {
           name: 'threads_get_profile',
-          description: 'Get the authenticated user\'s Threads profile including username, name, bio, and profile picture',
+          description:
+            "Get the authenticated user's Threads profile including username, name, bio, and profile picture",
           inputSchema: {
             type: 'object',
             properties: {
               fields: {
                 type: 'array',
                 items: { type: 'string' },
-                description: 'Optional fields to retrieve. Defaults to id, username, name, threads_profile_picture_url, threads_biography',
+                description:
+                  'Optional fields to retrieve. Defaults to id, username, name, threads_profile_picture_url, threads_biography',
               },
             },
           },
         },
         {
           name: 'threads_get_threads',
-          description: 'Get the authenticated user\'s threads (posts) with pagination support',
+          description: "Get the authenticated user's threads (posts) with pagination support",
           inputSchema: {
             type: 'object',
             properties: {
@@ -135,7 +141,8 @@ export class ThreadsMCPServer {
         },
         {
           name: 'threads_create_thread',
-          description: 'Create a new thread (post) with text, image, or video. Can also be used to reply to another thread.',
+          description:
+            'Create a new thread (post) with text, image, or video. Can also be used to reply to another thread.',
           inputSchema: {
             type: 'object',
             properties: {
@@ -161,6 +168,21 @@ export class ThreadsMCPServer {
                 description: 'Who can reply to this thread',
               },
             },
+          },
+        },
+        {
+          name: 'threads_delete_thread',
+          description:
+            'Delete a thread by ID. Requires the authenticated user to own the thread and have the threads_delete permission.',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              threadId: {
+                type: 'string',
+                description: 'The ID of the thread to delete',
+              },
+            },
+            required: ['threadId'],
           },
         },
         {
@@ -215,7 +237,8 @@ export class ThreadsMCPServer {
         },
         {
           name: 'threads_get_conversation',
-          description: 'Get the full conversation thread including the original post and all replies',
+          description:
+            'Get the full conversation thread including the original post and all replies',
           inputSchema: {
             type: 'object',
             properties: {
@@ -267,7 +290,9 @@ export class ThreadsMCPServer {
     // Handle tool calls
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (!this.client) {
-        throw new Error('Threads client not initialized. Please configure access token and user ID.');
+        throw new Error(
+          'Threads client not initialized. Please configure access token and user ID.'
+        );
       }
 
       const { name, arguments: args } = request.params;
@@ -316,6 +341,19 @@ export class ThreadsMCPServer {
           case 'threads_create_thread': {
             const params = CreateThreadSchema.parse(args);
             const result = await this.client.createThread(params);
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(result, null, 2),
+                },
+              ],
+            };
+          }
+
+          case 'threads_delete_thread': {
+            const params = DeleteThreadSchema.parse(args);
+            const result = await this.client.deleteThread(params.threadId);
             return {
               content: [
                 {
@@ -419,4 +457,3 @@ export class ThreadsMCPServer {
     await this.server.connect(transport);
   }
 }
-

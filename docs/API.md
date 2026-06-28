@@ -18,6 +18,7 @@ All tools return JSON responses. Parameters marked with `*` are required.
 Get the authenticated user's Threads profile.
 
 **Parameters:**
+
 ```typescript
 {
   fields?: string[]  // Optional fields to retrieve
@@ -27,6 +28,7 @@ Get the authenticated user's Threads profile.
 **Default fields:** `['id', 'username', 'name', 'threads_profile_picture_url', 'threads_biography']`
 
 **Example:**
+
 ```json
 {
   "name": "threads_get_profile",
@@ -37,6 +39,7 @@ Get the authenticated user's Threads profile.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "123456789",
@@ -54,6 +57,7 @@ Get the authenticated user's Threads profile.
 Get the authenticated user's threads (posts).
 
 **Parameters:**
+
 ```typescript
 {
   limit?: number     // 1-100, default: 25
@@ -62,6 +66,7 @@ Get the authenticated user's threads (posts).
 ```
 
 **Example:**
+
 ```json
 {
   "name": "threads_get_threads",
@@ -72,6 +77,7 @@ Get the authenticated user's threads (posts).
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -91,6 +97,7 @@ Get the authenticated user's threads (posts).
 Get a specific thread by ID.
 
 **Parameters:**
+
 ```typescript
 {
   threadId*: string  // Thread ID
@@ -99,6 +106,7 @@ Get a specific thread by ID.
 ```
 
 **Example:**
+
 ```json
 {
   "name": "threads_get_thread",
@@ -115,6 +123,7 @@ Get a specific thread by ID.
 Create a new thread (post).
 
 **Parameters:**
+
 ```typescript
 {
   text?: string                                        // Text content
@@ -128,6 +137,7 @@ Create a new thread (post).
 **Examples:**
 
 Text thread:
+
 ```json
 {
   "name": "threads_create_thread",
@@ -138,6 +148,7 @@ Text thread:
 ```
 
 Image thread:
+
 ```json
 {
   "name": "threads_create_thread",
@@ -149,6 +160,7 @@ Image thread:
 ```
 
 Reply:
+
 ```json
 {
   "name": "threads_create_thread",
@@ -161,9 +173,45 @@ Reply:
 ```
 
 **Response:**
+
 ```json
 {
   "id": "new-thread-456"
+}
+```
+
+---
+
+### threads_delete_thread
+
+Delete a thread by ID. The authenticated user must own the thread and the token
+must include the `threads_delete` permission.
+
+**Parameters:**
+
+```typescript
+{
+  threadId: string; // Thread ID to delete
+}
+```
+
+**Example:**
+
+```json
+{
+  "name": "threads_delete_thread",
+  "arguments": {
+    "threadId": "thread-123"
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "deleted_id": "thread-123"
 }
 ```
 
@@ -174,6 +222,7 @@ Reply:
 Get analytics/insights for a thread or user account.
 
 **Parameters:**
+
 ```typescript
 {
   threadId?: string   // Thread ID (omit for user-level insights)
@@ -184,6 +233,7 @@ Get analytics/insights for a thread or user account.
 ```
 
 **Thread Metrics:**
+
 - `views` - Number of times the thread was viewed
 - `likes` - Number of likes
 - `replies` - Number of replies
@@ -191,6 +241,7 @@ Get analytics/insights for a thread or user account.
 - `quotes` - Number of quote posts
 
 **User Metrics:**
+
 - `followers_count` - Total followers
 - `follower_demographics` - Follower demographics
 - `views` - Total views
@@ -200,6 +251,7 @@ Get analytics/insights for a thread or user account.
 - `quotes` - Total quotes
 
 **Example (Thread):**
+
 ```json
 {
   "name": "threads_get_insights",
@@ -211,6 +263,7 @@ Get analytics/insights for a thread or user account.
 ```
 
 **Example (User):**
+
 ```json
 {
   "name": "threads_get_insights",
@@ -223,6 +276,7 @@ Get analytics/insights for a thread or user account.
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -242,6 +296,7 @@ Get analytics/insights for a thread or user account.
 Get replies to a specific thread.
 
 **Parameters:**
+
 ```typescript
 {
   threadId*: string   // Thread ID
@@ -251,6 +306,7 @@ Get replies to a specific thread.
 ```
 
 **Example:**
+
 ```json
 {
   "name": "threads_get_replies",
@@ -262,6 +318,7 @@ Get replies to a specific thread.
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -288,6 +345,7 @@ Get replies to a specific thread.
 Get the full conversation (original thread + all replies).
 
 **Parameters:**
+
 ```typescript
 {
   threadId*: string   // Thread ID
@@ -297,6 +355,7 @@ Get the full conversation (original thread + all replies).
 ```
 
 **Example:**
+
 ```json
 {
   "name": "threads_get_conversation",
@@ -307,6 +366,7 @@ Get the full conversation (original thread + all replies).
 ```
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -333,6 +393,7 @@ Get the full conversation (original thread + all replies).
 Reply to an existing thread.
 
 **Parameters:**
+
 ```typescript
 {
   threadId*: string                                    // Thread ID to reply to
@@ -342,6 +403,7 @@ Reply to an existing thread.
 ```
 
 **Example:**
+
 ```json
 {
   "name": "threads_reply_to_thread",
@@ -354,6 +416,7 @@ Reply to an existing thread.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "reply-456"
@@ -395,7 +458,7 @@ Get user's threads.
 
 ```typescript
 const threads = await client.getThreads({ limit: 10 });
-threads.forEach(thread => console.log(thread.text));
+threads.forEach((thread) => console.log(thread.text));
 ```
 
 #### getThread(threadId: string, fields?: string[]): Promise\<ThreadsMedia\>
@@ -414,7 +477,7 @@ Create new thread.
 ```typescript
 const result = await client.createThread({
   text: 'Hello world!',
-  replyControl: 'everyone'
+  replyControl: 'everyone',
 });
 console.log('Created:', result.id);
 ```
@@ -425,7 +488,7 @@ Get thread insights.
 
 ```typescript
 const insights = await client.getThreadInsights('thread-123', {
-  metric: ['views', 'likes']
+  metric: ['views', 'likes'],
 });
 ```
 
@@ -435,7 +498,7 @@ Get user insights.
 
 ```typescript
 const insights = await client.getUserInsights({
-  metric: ['followers_count']
+  metric: ['followers_count'],
 });
 ```
 
@@ -573,14 +636,14 @@ try {
 
 ### Common Errors
 
-| Status Code | Meaning | Solution |
-|-------------|---------|----------|
-| 400 | Bad Request | Check your parameters |
-| 401 | Unauthorized | Verify access token |
-| 403 | Forbidden | Check permissions |
-| 404 | Not Found | Verify resource ID |
-| 429 | Rate Limited | Wait before retrying |
-| 500 | Server Error | Retry after delay |
+| Status Code | Meaning      | Solution              |
+| ----------- | ------------ | --------------------- |
+| 400         | Bad Request  | Check your parameters |
+| 401         | Unauthorized | Verify access token   |
+| 403         | Forbidden    | Check permissions     |
+| 404         | Not Found    | Verify resource ID    |
+| 429         | Rate Limited | Wait before retrying  |
+| 500         | Server Error | Retry after delay     |
 
 ### Rate Limiting
 
@@ -594,7 +657,7 @@ async function createThreadWithRetry(text: string, maxRetries = 3) {
     } catch (error) {
       if (error instanceof ThreadsAPIError && error.statusCode === 429) {
         const delay = Math.pow(2, i) * 1000; // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
       throw error;
@@ -620,4 +683,3 @@ async function createThreadWithRetry(text: string, maxRetries = 3) {
 ---
 
 For more information, see the [README](../README.md) or [Threads API Documentation](https://developers.facebook.com/docs/threads).
-

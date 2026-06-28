@@ -8,6 +8,7 @@ import type {
   ThreadsReplies,
   ThreadsConversation,
   CreateThreadResponse,
+  DeleteThreadResponse,
 } from '../../types/threads.js';
 
 vi.mock('../../client/threads-client.js');
@@ -25,6 +26,7 @@ describe('ThreadsMCPServer', () => {
       getThreads: vi.fn(),
       getThread: vi.fn(),
       createThread: vi.fn(),
+      deleteThread: vi.fn(),
       getThreadInsights: vi.fn(),
       getUserInsights: vi.fn(),
       getReplies: vi.fn(),
@@ -120,6 +122,20 @@ describe('ThreadsMCPServer', () => {
       const result = await mockClient.createThread(params);
 
       expect(mockClient.createThread).toHaveBeenCalledWith(params);
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should handle threads_delete_thread', async () => {
+      const mockResponse: DeleteThreadResponse = {
+        success: true,
+        deleted_id: 'thread-123',
+      };
+
+      vi.mocked(mockClient.deleteThread).mockResolvedValue(mockResponse);
+
+      const result = await mockClient.deleteThread('thread-123');
+
+      expect(mockClient.deleteThread).toHaveBeenCalledWith('thread-123');
       expect(result).toEqual(mockResponse);
     });
 
@@ -370,4 +386,3 @@ describe('ThreadsMCPServer', () => {
     });
   });
 });
-

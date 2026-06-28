@@ -89,12 +89,18 @@ export const CreateThreadResponseSchema = z.object({
   id: z.string(),
 });
 
+export const DeleteThreadResponseSchema = z.object({
+  success: z.boolean(),
+  deleted_id: z.string(),
+});
+
 export type ThreadsUser = z.infer<typeof ThreadsUserSchema>;
 export type ThreadsMedia = z.infer<typeof ThreadsMediaSchema>;
 export type ThreadsInsights = z.infer<typeof ThreadsInsightsSchema>;
 export type ThreadsReplies = z.infer<typeof ThreadsRepliesSchema>;
 export type ThreadsConversation = z.infer<typeof ThreadsConversationSchema>;
 export type CreateThreadResponse = z.infer<typeof CreateThreadResponseSchema>;
+export type DeleteThreadResponse = z.infer<typeof DeleteThreadResponseSchema>;
 
 // Client Configuration
 export interface ThreadsConfig {
